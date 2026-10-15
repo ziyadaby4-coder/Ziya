@@ -2,147 +2,215 @@
 <html lang="fa" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>ZIYA Chat</title>
-
   <style>
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
-      font-family: Tahoma, Arial, sans-serif;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 20px;
       background: #0b1220;
       color: white;
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 20px;
+      font-family: Tahoma, Arial, sans-serif;
     }
 
-    .app {
+    .card {
       width: 100%;
-      max-width: 400px;
+      max-width: 390px;
+      padding: 28px 22px;
+      border-radius: 24px;
       background: #141f32;
       border: 1px solid #263650;
-      border-radius: 24px;
-      padding: 28px 22px;
       text-align: center;
-      box-shadow: 0 15px 45px #0005;
     }
 
     .logo {
-      width: 76px;
-      height: 76px;
+      width: 70px;
+      height: 70px;
       margin: 0 auto 16px;
-      border-radius: 24px;
+      display: grid;
+      place-items: center;
+      border-radius: 22px;
       background: linear-gradient(135deg, #38e8b5, #1685f8);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 34px;
-      font-weight: bold;
       color: #071526;
+      font-size: 32px;
+      font-weight: bold;
     }
 
-    h1 {
-      margin: 0;
-      font-size: 30px;
-      letter-spacing: 1px;
-    }
+    h1 { margin: 0; font-size: 29px; }
 
-    .subtitle {
-      color: #9aabc4;
+    p {
+      color: #a5b4cc;
       font-size: 14px;
-      line-height: 1.9;
-      margin: 12px 0 26px;
+      line-height: 1.8;
     }
 
     input {
+      display: block;
       width: 100%;
+      margin: 12px 0;
       padding: 14px;
-      margin-bottom: 12px;
+      border-radius: 11px;
       border: 1px solid #34445e;
-      border-radius: 12px;
       background: #0b1527;
       color: white;
       font-size: 15px;
       outline: none;
-      direction: rtl;
     }
 
-    input:focus {
-      border-color: #38e8b5;
-    }
+    input:focus { border-color: #38e8b5; }
 
     button {
       width: 100%;
       padding: 14px;
-      border: none;
-      border-radius: 12px;
+      margin-top: 10px;
+      border: 0;
+      border-radius: 11px;
       background: linear-gradient(90deg, #38e8b5, #1685f8);
       color: #071526;
-      font-size: 16px;
       font-weight: bold;
+      font-size: 15px;
       cursor: pointer;
     }
 
-    #message {
-      margin-top: 18px;
-      color: #38e8b5;
-      font-size: 13px;
-      line-height: 1.8;
+    .secondary {
+      background: #263650;
+      color: white;
     }
 
-    .footer {
-      margin-top: 25px;
-      color: #6f829e;
-      font-size: 12px;
+    #status {
+      min-height: 24px;
+      overflow-wrap: anywhere;
+      font-size: 13px;
     }
+
+    .hidden { display: none; }
   </style>
 </head>
-
 <body>
-  <main class="app">
+  <main class="card">
     <div class="logo">Z</div>
-
     <h1>ZIYA Chat</h1>
+    <p>به دنیای ضیا خوش آمدی 💚</p>
 
-    <p class="subtitle">
-      ارتباطی ساده، سریع و مدرن<br>
-      به دنیای ضیا خوش آمدی 💚
-    </p>
+    <section id="auth">
+      <input id="email" type="email"
+             placeholder="ایمیل شما"
+             autocomplete="email" required>
 
-    <form id="welcomeForm">
-      <input
-        id="username"
-        type="text"
-        placeholder="نام خود را وارد کن"
-        maxlength="40"
-        required
-      >
+      <input id="password" type="password"
+             placeholder="رمز عبور (حداقل ۶ کاراکتر)"
+             autocomplete="new-password" required>
 
-      <button type="submit">ورود به ضیا ←</button>
-    </form>
+      <button id="register">ساخت حساب</button>
+      <button id="login" class="secondary">ورود به حساب</button>
+    </section>
 
-    <div id="message" aria-live="polite"></div>
+    <section id="account" class="hidden">
+      <p id="welcome"></p>
+      <button id="logout">خروج از حساب</button>
+    </section>
 
-    <div class="footer">
-      ZIYA Chat · ارتباط بدون مرز
-    </div>
+    <p id="status" role="status" aria-live="polite"></p>
   </main>
 
-  <script>
-    document.getElementById("welcomeForm").addEventListener("submit", function(event) {
-      event.preventDefault();
+  <script type="module">
+    import { initializeApp } from
+      "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
 
-      const name = document.getElementById("username").value.trim();
+    import {
+      getAuth,
+      createUserWithEmailAndPassword,
+      signInWithEmailAndPassword,
+      signOut,
+      onAuthStateChanged
+    } from
+      "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
 
-      if (name) {
-        document.getElementById("message").textContent =
-          "سلام " + name + " عزیز! به نسخه آزمایشی ضیا خوش آمدی 💚";
+    const firebaseConfig = {
+      apiKey: "AIzaSyCmRxFSX5vJDl6SD8orYibAY1hxmZM5X0U",
+      authDomain: "ziya-808cb.firebaseapp.com",
+      projectId: "ziya-808cb",
+      storageBucket: "ziya-808cb.firebasestorage.app",
+      messagingSenderId: "945057165857",
+      appId: "1:945057165857:web:5af406fac33b9c77756960"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    const email = document.getElementById("email");
+    const password = document.getElementById("password");
+    const status = document.getElementById("status");
+    const authSection = document.getElementById("auth");
+    const accountSection = document.getElementById("account");
+
+    function showError(error) {
+      const messages = {
+        "auth/email-already-in-use": "این ایمیل قبلاً ثبت شده است.",
+        "auth/invalid-email": "ایمیل معتبر نیست.",
+        "auth/weak-password": "رمز عبور باید حداقل ۶ کاراکتر باشد.",
+        "auth/invalid-credential": "ایمیل یا رمز عبور اشتباه است.",
+        "auth/network-request-failed": "اتصال اینترنت را بررسی کن.",
+        "auth/operation-not-allowed": "ورود با ایمیل در Firebase فعال نیست.",
+        "auth/unauthorized-domain": "دامنهٔ سایت در Firebase مجاز نشده است."
+      };
+
+      status.textContent =
+        messages[error.code] || "خطا رخ داد: " + error.message;
+    }
+
+    document.getElementById("register").addEventListener("click", async () => {
+      status.textContent = "";
+
+      if (!email.value.trim() || password.value.length < 6) {
+        status.textContent = "ایمیل را وارد کن و رمز حداقل ۶ کاراکتری بساز.";
+        return;
+      }
+
+      try {
+        await createUserWithEmailAndPassword(
+          auth, email.value.trim(), password.value
+        );
+        status.textContent = "حساب با موفقیت ساخته شد!";
+      } catch (error) {
+        showError(error);
+      }
+    });
+
+    document.getElementById("login").addEventListener("click", async () => {
+      status.textContent = "";
+
+      try {
+        await signInWithEmailAndPassword(
+          auth, email.value.trim(), password.value
+        );
+        status.textContent = "ورود موفق بود!";
+      } catch (error) {
+        showError(error);
+      }
+    });
+
+    document.getElementById("logout").addEventListener("click", async () => {
+      try {
+        await signOut(auth);
+        status.textContent = "از حساب خارج شدی.";
+      } catch (error) {
+        showError(error);
+      }
+    });
+
+    onAuthStateChanged(auth, user => {
+      authSection.classList.toggle("hidden", !!user);
+      accountSection.classList.toggle("hidden", !user);
+
+      if (user) {
+        document.getElementById("welcome").textContent =
+          "وارد شدی: " + user.email;
       }
     });
   </script>
