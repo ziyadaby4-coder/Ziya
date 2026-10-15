@@ -5,90 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>ZIYA Chat</title>
   <style>
-    * { box-sizing: border-box; }
-
-    body {
-      margin: 0;
-      min-height: 100vh;
-      display: grid;
-      place-items: center;
-      padding: 20px;
-      background: #0b1220;
-      color: white;
-      font-family: Tahoma, Arial, sans-serif;
-    }
-
-    .card {
-      width: 100%;
-      max-width: 390px;
-      padding: 28px 22px;
-      border-radius: 24px;
-      background: #141f32;
-      border: 1px solid #263650;
-      text-align: center;
-    }
-
-    .logo {
-      width: 70px;
-      height: 70px;
-      margin: 0 auto 16px;
-      display: grid;
-      place-items: center;
-      border-radius: 22px;
-      background: linear-gradient(135deg, #38e8b5, #1685f8);
-      color: #071526;
-      font-size: 32px;
-      font-weight: bold;
-    }
-
-    h1 { margin: 0; font-size: 29px; }
-
-    p {
-      color: #a5b4cc;
-      font-size: 14px;
-      line-height: 1.8;
-    }
-
-    input {
-      display: block;
-      width: 100%;
-      margin: 12px 0;
-      padding: 14px;
-      border-radius: 11px;
-      border: 1px solid #34445e;
-      background: #0b1527;
-      color: white;
-      font-size: 15px;
-      outline: none;
-    }
-
-    input:focus { border-color: #38e8b5; }
-
-    button {
-      width: 100%;
-      padding: 14px;
-      margin-top: 10px;
-      border: 0;
-      border-radius: 11px;
-      background: linear-gradient(90deg, #38e8b5, #1685f8);
-      color: #071526;
-      font-weight: bold;
-      font-size: 15px;
-      cursor: pointer;
-    }
-
-    .secondary {
-      background: #263650;
-      color: white;
-    }
-
-    #status {
-      min-height: 24px;
-      overflow-wrap: anywhere;
-      font-size: 13px;
-    }
-
-    .hidden { display: none; }
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;display:grid;place-items:center;padding:20px;background:#0b1220;color:white;font-family:Tahoma,Arial,sans-serif}
+    .card{width:100%;max-width:390px;padding:28px 22px;border-radius:24px;background:#141f32;border:1px solid #263650;text-align:center}
+    .logo{width:70px;height:70px;margin:0 auto 16px;display:grid;place-items:center;border-radius:22px;background:linear-gradient(135deg,#38e8b5,#1685f8);color:#071526;font-size:32px;font-weight:bold}
+    h1{margin:0;font-size:29px}
+    p{color:#a5b4cc;font-size:14px;line-height:1.8}
+    input{display:block;width:100%;margin:12px 0;padding:14px;border-radius:11px;border:1px solid #34445e;background:#0b1527;color:white;font-size:15px;outline:none}
+    input:focus{border-color:#38e8b5}
+    button{width:100%;padding:14px;margin-top:10px;border:0;border-radius:11px;background:linear-gradient(90deg,#38e8b5,#1685f8);color:#071526;font-weight:bold;font-size:15px;cursor:pointer}
+    button:disabled{opacity:.6}
+    .secondary{background:#263650;color:white}
+    #status{min-height:24px;overflow-wrap:anywhere;font-size:13px}
+    .hidden{display:none}
+    #recaptcha-container{display:flex;justify-content:center;margin:12px 0}
   </style>
 </head>
 <body>
@@ -96,40 +26,25 @@
     <div class="logo">Z</div>
     <h1>ZIYA Chat</h1>
     <p>به دنیای ضیا خوش آمدی 💚</p>
-
     <section id="auth">
-      <input id="email" type="email"
-             placeholder="ایمیل شما"
-             autocomplete="email" required>
-
-      <input id="password" type="password"
-             placeholder="رمز عبور (حداقل ۶ کاراکتر)"
-             autocomplete="new-password" required>
-
-      <button id="register">ساخت حساب</button>
-      <button id="login" class="secondary">ورود به حساب</button>
+      <p>برای ورود، شماره تلفن را همراه کد کشور وارد کن.</p>
+      <input id="phone" type="tel" placeholder="مثال: +989123456789" autocomplete="tel" inputmode="tel">
+      <div id="recaptcha-container"></div>
+      <button id="send-code">ارسال کد تأیید</button>
+      <div id="verify-section" class="hidden">
+        <input id="code" type="text" placeholder="کد پیامک‌شده" inputmode="numeric" autocomplete="one-time-code">
+        <button id="verify-code">تأیید کد و ورود</button>
+      </div>
     </section>
-
     <section id="account" class="hidden">
       <p id="welcome"></p>
       <button id="logout">خروج از حساب</button>
     </section>
-
     <p id="status" role="status" aria-live="polite"></p>
   </main>
-
   <script type="module">
-    import { initializeApp } from
-      "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
-
-    import {
-      getAuth,
-      createUserWithEmailAndPassword,
-      signInWithEmailAndPassword,
-      signOut,
-      onAuthStateChanged
-    } from
-      "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
+    import { getAuth, RecaptchaVerifier, signInWithPhoneNumber, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCmRxFSX5vJDl6SD8orYibAY1hxmZM5X0U",
@@ -139,56 +54,67 @@
       messagingSenderId: "945057165857",
       appId: "1:945057165857:web:5af406fac33b9c77756960"
     };
-
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
-
-    const email = document.getElementById("email");
-    const password = document.getElementById("password");
     const status = document.getElementById("status");
     const authSection = document.getElementById("auth");
     const accountSection = document.getElementById("account");
+    const sendButton = document.getElementById("send-code");
+    const verifySection = document.getElementById("verify-section");
+    let confirmationResult = null;
+    let recaptchaVerifier = null;
 
     function showError(error) {
       const messages = {
-        "auth/email-already-in-use": "این ایمیل قبلاً ثبت شده است.",
-        "auth/invalid-email": "ایمیل معتبر نیست.",
-        "auth/weak-password": "رمز عبور باید حداقل ۶ کاراکتر باشد.",
-        "auth/invalid-credential": "ایمیل یا رمز عبور اشتباه است.",
+        "auth/invalid-phone-number": "شماره معتبر نیست؛ کد کشور را هم وارد کن، مثلاً +989123456789.",
+        "auth/too-many-requests": "درخواست‌ها زیاد شده‌اند؛ کمی صبر کن و دوباره امتحان کن.",
+        "auth/quota-exceeded": "محدودیت ارسال پیامک Firebase پر شده است.",
+        "auth/captcha-check-failed": "تأیید امنیتی ناموفق بود؛ صفحه را تازه کن و دوباره امتحان کن.",
+        "auth/invalid-verification-code": "کد تأیید اشتباه است.",
+        "auth/code-expired": "کد منقضی شده؛ دوباره کد بگیر.",
+        "auth/unauthorized-domain": "دامنه سایت در Firebase مجاز نیست.",
         "auth/network-request-failed": "اتصال اینترنت را بررسی کن.",
-        "auth/operation-not-allowed": "ورود با ایمیل در Firebase فعال نیست.",
-        "auth/unauthorized-domain": "دامنهٔ سایت در Firebase مجاز نشده است."
+        "auth/operation-not-allowed": "ورود با شماره تلفن در Firebase فعال نیست."
       };
-
-      status.textContent =
-        messages[error.code] || "خطا رخ داد: " + error.message;
+      status.textContent = messages[error.code] || "خطا: " + error.message;
     }
 
-    document.getElementById("register").addEventListener("click", async () => {
+    sendButton.addEventListener("click", async () => {
       status.textContent = "";
-
-      if (!email.value.trim() || password.value.length < 6) {
-        status.textContent = "ایمیل را وارد کن و رمز حداقل ۶ کاراکتری بساز.";
+      const phone = document.getElementById("phone").value.trim();
+      if (!/^\+[1-9]\d{7,14}$/.test(phone)) {
+        status.textContent = "شماره را با + و کد کشور وارد کن؛ مثال: +989123456789";
         return;
       }
-
+      sendButton.disabled = true;
       try {
-        await createUserWithEmailAndPassword(
-          auth, email.value.trim(), password.value
-        );
-        status.textContent = "حساب با موفقیت ساخته شد!";
+        if (!recaptchaVerifier) {
+          recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", { size: "normal" });
+        }
+        confirmationResult = await signInWithPhoneNumber(auth, phone, recaptchaVerifier);
+        verifySection.classList.remove("hidden");
+        status.textContent = "کد ارسال شد. پیامک را بررسی کن.";
       } catch (error) {
         showError(error);
+        if (recaptchaVerifier) {
+          try { await recaptchaVerifier.clear(); } catch {}
+          recaptchaVerifier = null;
+          document.getElementById("recaptcha-container").innerHTML = "";
+        }
+      } finally {
+        sendButton.disabled = false;
       }
     });
 
-    document.getElementById("login").addEventListener("click", async () => {
+    document.getElementById("verify-code").addEventListener("click", async () => {
       status.textContent = "";
-
+      const code = document.getElementById("code").value.trim();
+      if (!confirmationResult || !code) {
+        status.textContent = "اول کد پیامک‌شده را وارد کن.";
+        return;
+      }
       try {
-        await signInWithEmailAndPassword(
-          auth, email.value.trim(), password.value
-        );
+        await confirmationResult.confirm(code);
         status.textContent = "ورود موفق بود!";
       } catch (error) {
         showError(error);
@@ -196,22 +122,14 @@
     });
 
     document.getElementById("logout").addEventListener("click", async () => {
-      try {
-        await signOut(auth);
-        status.textContent = "از حساب خارج شدی.";
-      } catch (error) {
-        showError(error);
-      }
+      try { await signOut(auth); status.textContent = "از حساب خارج شدی."; }
+      catch (error) { showError(error); }
     });
 
     onAuthStateChanged(auth, user => {
       authSection.classList.toggle("hidden", !!user);
       accountSection.classList.toggle("hidden", !user);
-
-      if (user) {
-        document.getElementById("welcome").textContent =
-          "وارد شدی: " + user.email;
-      }
+      if (user) document.getElementById("welcome").textContent = "وارد شدی: " + (user.phoneNumber || "حساب ضیا");
     });
   </script>
 </body>
