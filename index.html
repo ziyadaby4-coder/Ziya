@@ -186,6 +186,8 @@ const auth = getAuth(app);
 const db = initializeFirestore(app, {
   experimentalForceLongPolling: true
 });
+  experimentalForceLongPolling: true
+});
 const $ = id => document.getElementById(id);
 
 let confirmation = null;
