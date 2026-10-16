@@ -1,31 +1,474 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ضیا | ZIYA Chat</title>
+
 <style>
-:root{color-scheme:dark;--bg:#0b1020;--panel:#131b2f;--accent:#6ee7b7;--text:#f3f6ff;--muted:#aab6d3}
-*{box-sizing:border-box}body{margin:0;background:linear-gradient(140deg,#0b1020,#111c35);color:var(--text);font-family:system-ui,sans-serif}.wrap{max-width:760px;margin:auto;padding:18px}.brand{display:flex;align-items:center;gap:12px;margin:8px 0 18px}.logo{width:48px;height:48px;border-radius:16px;background:linear-gradient(135deg,#6ee7b7,#60a5fa);color:#09111f;display:grid;place-items:center;font-weight:900;font-size:22px}.brand h1{font-size:23px;margin:0}.brand p,.muted{color:var(--muted);font-size:13px;line-height:1.6}.card{background:rgba(19,27,47,.96);border:1px solid #293653;border-radius:20px;padding:18px;margin:12px 0}h2{font-size:18px;margin:0 0 12px}label{display:block;font-size:13px;color:var(--muted);margin:12px 0 6px}input,button{font:inherit;border-radius:12px;width:100%;padding:12px;border:1px solid #354362}input{background:#0c1428;color:var(--text)}button{background:var(--accent);color:#07131b;border:0;font-weight:750;margin-top:10px;cursor:pointer}button.secondary{background:#263450;color:var(--text);border:1px solid #3a4b6d}.status{font-size:13px;line-height:1.6;margin-top:10px;white-space:pre-wrap}.error{color:#ff9b9b}.success{color:var(--accent)}.hidden{display:none!important}.row{display:flex;gap:8px}.row>*{flex:1;min-width:0}.uid{direction:ltr;word-break:break-all;background:#0c1428;padding:10px;border-radius:10px;font-size:12px;color:#cbd5e1}.messages{height:300px;overflow:auto;display:flex;flex-direction:column;gap:8px;padding:10px;background:#0c1428;border-radius:14px;margin:12px 0}.bubble{max-width:85%;padding:10px 12px;border-radius:14px;background:#253451;align-self:flex-start;overflow-wrap:anywhere}.bubble.mine{align-self:flex-end;background:#1b5b4d}.bubble small{display:block;color:#d3e2ed;font-size:10px;margin-top:5px}.empty{color:var(--muted);text-align:center;margin:auto;font-size:13px}.topline{display:flex;align-items:center;justify-content:space-between;gap:10px}.topline button{width:auto;padding:8px 12px;margin:0}
-</style></head><body><div class="wrap">
-<header class="brand"><div class="logo">ض</div><div><h1>ضیا | ZIYA Chat</h1><p>پیام‌رسان آزمایشی خصوصی</p></div></header>
-<section id="authCard" class="card"><h2>ورود با شماره تلفن</h2><p class="muted">برای آزمایش می‌توانی از شماره آزمایشی ثبت‌شده در Firebase استفاده کنی. شماره آزمایشی پیامک واقعی نمی‌فرستد.</p><label for="phone">شماره تلفن با کد کشور</label><input id="phone" type="tel" placeholder="+98912xxxxxxx" autocomplete="tel"><div id="recaptcha-container" style="margin-top:12px"></div><button id="sendCode">ارسال کد تأیید</button><div id="codeArea" class="hidden"><label for="code">کد تأیید</label><input id="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="کد ۶ رقمی"><button id="verifyCode">تأیید و ورود</button></div><div id="authStatus" class="status" role="status"></div></section>
-<section id="chatCard" class="hidden"><div class="card"><div class="topline"><h2>حساب شما</h2><button id="logout" class="secondary">خروج</button></div><p class="muted">برای شروع چت، شناسه کاربری (UID) طرف مقابل را از خودش بگیر و اینجا وارد کن. جست‌وجوی امن با شماره تلفن هنوز پیاده‌سازی نشده است.</p><label>شناسه شما (UID)</label><div id="myUid" class="uid"></div><button id="copyUid" class="secondary">کپی شناسه من</button><label for="peerUid">شناسه طرف مقابل (UID)</label><input id="peerUid" placeholder="UID دوستت را وارد کن" autocomplete="off" dir="ltr"><button id="openChat">باز کردن گفت‌وگو</button><div id="chatStatus" class="status" role="status"></div></div>
-<div id="conversationCard" class="card hidden"><h2>گفت‌وگو</h2><div id="messages" class="messages"><div class="empty">هنوز پیامی نیست.</div></div><label for="messageText">پیام شما</label><div class="row"><input id="messageText" maxlength="2000" placeholder="پیام بنویس..." autocomplete="off"><button id="sendMessage">ارسال</button></div><p class="muted">برای کارکرد چت باید قوانین امن Firestore نیز منتشر شوند.</p></div></section>
-<p class="muted">نسخه اولیه. تا زمانی که قوانین امن Firestore تنظیم نشده‌اند، ارسال پیام ممکن است مسدود باشد.</p></div>
+:root {
+  color-scheme: dark;
+  --bg: #0b1020;
+  --panel: #131b2f;
+  --accent: #6ee7b7;
+  --text: #f3f6ff;
+  --muted: #aab6d3;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: linear-gradient(140deg,#0b1020,#111c35);
+  color: var(--text);
+  font-family: system-ui,sans-serif;
+}
+.wrap { max-width: 760px; margin: auto; padding: 18px; }
+.brand { display: flex; align-items: center; gap: 12px; margin: 8px 0 18px; }
+.logo {
+  width: 48px; height: 48px; border-radius: 16px;
+  background: linear-gradient(135deg,#6ee7b7,#60a5fa);
+  color: #09111f; display: grid; place-items: center;
+  font-weight: 900; font-size: 22px;
+}
+.brand h1 { font-size: 23px; margin: 0; }
+.brand p,.muted { color: var(--muted); font-size: 13px; line-height: 1.7; }
+.card {
+  background: rgba(19,27,47,.96);
+  border: 1px solid #293653;
+  border-radius: 20px; padding: 18px; margin: 12px 0;
+}
+h2 { font-size: 18px; margin: 0 0 12px; }
+label { display: block; font-size: 13px; color: var(--muted); margin: 12px 0 6px; }
+input,button {
+  font: inherit; border-radius: 12px; width: 100%;
+  padding: 12px; border: 1px solid #354362;
+}
+input { background: #0c1428; color: var(--text); }
+button {
+  background: var(--accent); color: #07131b;
+  border: 0; font-weight: 750; margin-top: 10px;
+  cursor: pointer;
+}
+button:disabled { opacity: .55; cursor: wait; }
+button.secondary { background: #263450; color: var(--text); border: 1px solid #3a4b6d; }
+.status { font-size: 13px; line-height: 1.8; margin-top: 10px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.error { color: #ff9b9b; }
+.success { color: var(--accent); }
+.hidden { display: none !important; }
+.row { display: flex; gap: 8px; align-items: stretch; }
+.row > * { flex: 1; min-width: 0; }
+.uid {
+  direction: ltr; word-break: break-all; background: #0c1428;
+  padding: 10px; border-radius: 10px; font-size: 12px; color: #cbd5e1;
+}
+.messages {
+  height: 300px; overflow: auto; display: flex;
+  flex-direction: column; gap: 8px; padding: 10px;
+  background: #0c1428; border-radius: 14px; margin: 12px 0;
+}
+.bubble {
+  max-width: 85%; padding: 10px 12px; border-radius: 14px;
+  background: #253451; align-self: flex-start; overflow-wrap: anywhere;
+}
+.bubble.mine { align-self: flex-end; background: #1b5b4d; }
+.bubble small { display: block; color: #d3e2ed; font-size: 10px; margin-top: 5px; }
+.empty { color: var(--muted); text-align: center; margin: auto; font-size: 13px; }
+.topline { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.topline button { width: auto; padding: 8px 12px; margin: 0; }
+</style>
+</head>
+
+<body>
+<div class="wrap">
+
+<header class="brand">
+  <div class="logo">ض</div>
+  <div>
+    <h1>ضیا | ZIYA Chat</h1>
+    <p>پیام‌رسان آزمایشی خصوصی</p>
+  </div>
+</header>
+
+<section id="authCard" class="card">
+  <h2>ورود با شماره تلفن</h2>
+  <p class="muted">
+    برای آزمایش می‌توانی از شماره آزمایشی ثبت‌شده در Firebase استفاده کنی.
+    این شماره‌ها پیامک واقعی دریافت نمی‌کنند.
+  </p>
+
+  <label for="phone">شماره تلفن با کد کشور</label>
+  <input id="phone" type="tel" placeholder="+98912xxxxxxx" autocomplete="tel">
+
+  <div id="recaptcha-container" style="margin-top:12px"></div>
+
+  <button id="sendCode">ارسال کد تأیید</button>
+
+  <div id="codeArea" class="hidden">
+    <label for="code">کد تأیید</label>
+    <input id="code" inputmode="numeric" autocomplete="one-time-code"
+           maxlength="6" placeholder="کد ۶ رقمی">
+    <button id="verifyCode">تأیید و ورود</button>
+  </div>
+
+  <div id="authStatus" class="status" role="status"></div>
+</section>
+
+<section id="chatCard" class="hidden">
+  <div class="card">
+    <div class="topline">
+      <h2>حساب شما</h2>
+      <button id="logout" class="secondary">خروج</button>
+    </div>
+
+    <p class="muted">
+      برای شروع گفت‌وگو، UID حساب دوم را از صاحب آن بگیر.
+      هر دو حساب باید وارد شده باشند.
+    </p>
+
+    <label>شناسه شما (UID)</label>
+    <div id="myUid" class="uid"></div>
+    <button id="copyUid" class="secondary">کپی شناسه من</button>
+
+    <label for="peerUid">شناسه طرف مقابل (UID)</label>
+    <input id="peerUid" placeholder="UID دوستت را وارد کن"
+           autocomplete="off" dir="ltr">
+
+    <button id="openChat">باز کردن گفت‌وگو</button>
+    <div id="chatStatus" class="status" role="status"></div>
+  </div>
+
+  <div id="conversationCard" class="card hidden">
+    <h2>گفت‌وگو</h2>
+
+    <div id="messages" class="messages">
+      <div class="empty">هنوز پیامی نیست.</div>
+    </div>
+
+    <label for="messageText">پیام شما</label>
+    <div class="row">
+      <input id="messageText" maxlength="2000"
+             placeholder="پیام بنویس..." autocomplete="off">
+      <button id="sendMessage">ارسال</button>
+    </div>
+
+    <div id="messageStatus" class="status" role="status"></div>
+  </div>
+</section>
+
+<p class="muted">ZIYA Chat — نسخه آزمایشی</p>
+</div>
+
 <script type="module">
-import {initializeApp} from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
-import {getAuth,RecaptchaVerifier,signInWithPhoneNumber,onAuthStateChanged,signOut} from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
-import {getFirestore,doc,setDoc,collection,addDoc,query,orderBy,onSnapshot,serverTimestamp} from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
-const firebaseConfig={apiKey:"AIzaSyCmRxFSX5vJDl6SD8orYibAY1hxmZM5X0U",authDomain:"ziya-808cb.firebaseapp.com",projectId:"ziya-808cb",storageBucket:"ziya-808cb.firebasestorage.app",messagingSenderId:"945057165857",appId:"1:945057165857:web:5af406fac33b9c77756960",measurementId:"G-2ESQBZMBXX"};
-const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app),$=id=>document.getElementById(id);
-let confirmation=null,recaptcha=null,activeConversationId=null,unsubscribeMessages=null;
-function status(id,msg,kind=""){const el=$(id);el.textContent=msg;el.className="status "+kind}
-async function setupRecaptcha(){if(recaptcha){try{recaptcha.clear()}catch{}recaptcha=null}recaptcha=new RecaptchaVerifier(auth,"recaptcha-container",{size:"normal"});await recaptcha.render()}
-$("sendCode").onclick=async()=>{const phone=$("phone").value.trim();if(!phone.startsWith("+")||phone.length<8)return status("authStatus","شماره را با کد کشور وارد کن؛ مثل +98…","error");$("sendCode").disabled=true;status("authStatus","در حال ارسال درخواست…");try{await setupRecaptcha();confirmation=await signInWithPhoneNumber(auth,phone,recaptcha);$("codeArea").classList.remove("hidden");status("authStatus","کد ارسال شد. برای شماره آزمایشی، کد ذخیره‌شده در Firebase را وارد کن.","success")}catch(e){status("authStatus","خطا: "+(e.code||e.message)+"\n"+(e.message||""),"error");try{recaptcha?.clear()}catch{}recaptcha=null}finally{$("sendCode").disabled=false}};
-$("verifyCode").onclick=async()=>{const code=$("code").value.trim();if(!confirmation)return status("authStatus","اول روی «ارسال کد تأیید» بزن.","error");if(!/^\d{6}$/.test(code))return status("authStatus","کد باید ۶ رقم باشد.","error");$("verifyCode").disabled=true;try{await confirmation.confirm(code);status("authStatus","ورود موفق بود.","success")}catch(e){status("authStatus","خطا: "+(e.code||e.message),"error")}finally{$("verifyCode").disabled=false}};
-onAuthStateChanged(auth,user=>{if(user){$("authCard").classList.add("hidden");$("chatCard").classList.remove("hidden");$("myUid").textContent=user.uid}else{$("authCard").classList.remove("hidden");$("chatCard").classList.add("hidden");$("conversationCard").classList.add("hidden");if(unsubscribeMessages)unsubscribeMessages();unsubscribeMessages=null;activeConversationId=null}});
-$("copyUid").onclick=async()=>{try{await navigator.clipboard.writeText(auth.currentUser.uid);status("chatStatus","شناسه کپی شد؛ فقط با شخصی که می‌خواهی با او چت کنی به اشتراک بگذار.","success")}catch{status("chatStatus","شناسه را با لمس طولانی روی متن بالا انتخاب و کپی کن.")}};
-$("openChat").onclick=async()=>{status("chatStatus","دکمه کار می‌کند؛ در حال بررسی...","success");const user=auth.currentUser,peer=$("peerUid").value.trim();if(!user)return status("chatStatus","اول وارد حساب شو.","error");if(peer.length<10)return status("chatStatus","UID طرف مقابل را کامل وارد کن.","error");if(peer===user.uid)return status("chatStatus","برای آزمایش با حساب دوم وارد شو؛ نمی‌توانی با خودت چت کنی.","error");const members=[user.uid,peer].sort();activeConversationId=members.join("_");status("chatStatus","...رسید به مرحله ذخیره گفت‌وگو","success");try{await setDoc(doc(db,"conversations",activeConversationId),{members,updatedAt:serverTimestamp()},{merge:true});$("conversationCard").classList.remove("hidden");status("chatStatus","گفت‌وگو باز شد.","success");if(unsubscribeMessages)unsubscribeMessages();const q=query(collection(db,"conversations",activeConversationId,"messages"),orderBy("createdAt","asc"));unsubscribeMessages=onSnapshot(q,snap=>{const box=$("messages");box.innerHTML="";if(snap.empty){box.innerHTML='<div class="empty">هنوز پیامی نیست؛ اولین پیام را بفرست.</div>';return}snap.forEach(item=>{const d=item.data(),bubble=document.createElement("div");bubble.className="bubble"+(d.senderId===auth.currentUser?.uid?" mine":"");const body=document.createElement("div");body.textContent=d.text||"";const small=document.createElement("small");small.textContent=d.senderId===auth.currentUser?.uid?"شما":"طرف مقابل";bubble.append(body,small);box.appendChild(bubble)});box.scrollTop=box.scrollHeight},e=>status("chatStatus","خطای خواندن پیام‌ها: "+(e.code||e.message),"error"))}catch(e){status("chatStatus","خطای باز کردن گفت‌وگو: "+(e.code||e.message)+"\nاحتمالاً باید قوانین امن Firestore تنظیم شوند.","error")}};
-$("sendMessage").onclick=async()=>{const user=auth.currentUser,text=$("messageText").value.trim();if(!user||!activeConversationId)return status("chatStatus","اول گفت‌وگو را باز کن.","error");if(!text)return;$("sendMessage").disabled=true;try{await addDoc(collection(db,"conversations",activeConversationId,"messages"),{text,senderId:user.uid,createdAt:serverTimestamp()});$("messageText").value="";status("chatStatus","پیام ارسال شد.","success")}catch(e){status("chatStatus","خطای ارسال: "+(e.code||e.message)+"\nقوانین Firestore احتمالاً هنوز دسترسی لازم را نداده‌اند.","error")}finally{$("sendMessage").disabled=false}};
-$("messageText").addEventListener("keydown",e=>{if(e.key==="Enter")$("sendMessage").click()});$("logout").onclick=async()=>{if(unsubscribeMessages)unsubscribeMessages();unsubscribeMessages=null;await signOut(auth)};
-</script></body></html>
+import { initializeApp }
+  from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
+
+import {
+  getAuth, RecaptchaVerifier, signInWithPhoneNumber,
+  onAuthStateChanged, signOut
+} from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
+
+import {
+  getFirestore, doc, setDoc, collection, addDoc,
+  query, orderBy, onSnapshot, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCmRxFSX5vJDl6SD8orYibAY1hxmZM5X0U",
+  authDomain: "ziya-808cb.firebaseapp.com",
+  projectId: "ziya-808cb",
+  storageBucket: "ziya-808cb.firebasestorage.app",
+  messagingSenderId: "945057165857",
+  appId: "1:945057165857:web:5af406fac33b9c77756960",
+  measurementId: "G-2ESQBZMBXX"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const $ = id => document.getElementById(id);
+
+let confirmation = null;
+let recaptcha = null;
+let activeConversationId = null;
+let unsubscribeMessages = null;
+let openingChat = false;
+
+function status(id, message, kind = "") {
+  const el = $(id);
+  el.textContent = message;
+  el.className = "status " + kind;
+}
+
+function errorText(e) {
+  return (e?.code || "خطای نامشخص") + "\n" +
+         (e?.message || "جزئیات خطا موجود نیست.");
+}
+
+function stopMessages() {
+  if (unsubscribeMessages) unsubscribeMessages();
+  unsubscribeMessages = null;
+}
+
+async function setupRecaptcha() {
+  if (recaptcha) {
+    try { recaptcha.clear(); } catch {}
+    recaptcha = null;
+  }
+
+  recaptcha = new RecaptchaVerifier(
+    auth,
+    "recaptcha-container",
+    { size: "normal" }
+  );
+
+  await recaptcha.render();
+}
+
+$("sendCode").onclick = async () => {
+  const phone = $("phone").value.trim();
+
+  if (!phone.startsWith("+") || phone.length < 8) {
+    return status("authStatus",
+      "شماره را با کد کشور وارد کن؛ مثل +98…", "error");
+  }
+
+  $("sendCode").disabled = true;
+  status("authStatus", "در حال آماده‌سازی تأیید شماره…");
+
+  try {
+    await setupRecaptcha();
+
+    status("authStatus", "در حال درخواست ورود از Firebase…");
+
+    confirmation = await signInWithPhoneNumber(auth, phone, recaptcha);
+
+    $("codeArea").classList.remove("hidden");
+
+    status("authStatus",
+      "درخواست موفق بود. کد آزمایشی ثبت‌شده در Firebase را وارد کن.",
+      "success");
+  } catch (e) {
+    status("authStatus", "خطای ورود:\n" + errorText(e), "error");
+
+    try { recaptcha?.clear(); } catch {}
+    recaptcha = null;
+  } finally {
+    $("sendCode").disabled = false;
+  }
+};
+
+$("verifyCode").onclick = async () => {
+  const code = $("code").value.trim();
+
+  if (!confirmation) {
+    return status("authStatus",
+      "ابتدا روی «ارسال کد تأیید» بزن.", "error");
+  }
+
+  if (!/^\d{6}$/.test(code)) {
+    return status("authStatus", "کد باید ۶ رقم باشد.", "error");
+  }
+
+  $("verifyCode").disabled = true;
+  status("authStatus", "در حال بررسی کد…");
+
+  try {
+    await confirmation.confirm(code);
+    status("authStatus", "ورود موفق بود.", "success");
+  } catch (e) {
+    status("authStatus", "خطای تأیید:\n" + errorText(e), "error");
+  } finally {
+    $("verifyCode").disabled = false;
+  }
+};
+
+onAuthStateChanged(auth, user => {
+  if (user) {
+    $("authCard").classList.add("hidden");
+    $("chatCard").classList.remove("hidden");
+    $("myUid").textContent = user.uid;
+  } else {
+    $("authCard").classList.remove("hidden");
+    $("chatCard").classList.add("hidden");
+    $("conversationCard").classList.add("hidden");
+
+    stopMessages();
+    activeConversationId = null;
+  }
+});
+
+$("copyUid").onclick = async () => {
+  const uid = auth.currentUser?.uid;
+
+  if (!uid) {
+    return status("chatStatus", "ابتدا وارد حساب شو.", "error");
+  }
+
+  try {
+    await navigator.clipboard.writeText(uid);
+    status("chatStatus", "شناسه کپی شد.", "success");
+  } catch {
+    status("chatStatus",
+      "شناسه را با لمس طولانی روی متن انتخاب و کپی کن.");
+  }
+};
+
+$("openChat").onclick = async () => {
+  if (openingChat) return;
+
+  const user = auth.currentUser;
+  const peer = $("peerUid").value.trim();
+
+  if (!user) {
+    return status("chatStatus", "ابتدا وارد حساب شو.", "error");
+  }
+
+  if (peer.length < 10) {
+    return status("chatStatus",
+      "UID طرف مقابل ناقص است. شناسه کامل را وارد کن.", "error");
+  }
+
+  if (peer === user.uid) {
+    return status("chatStatus",
+      "این UID متعلق به خودت است. از UID حساب دوم استفاده کن.", "error");
+  }
+
+  openingChat = true;
+  $("openChat").disabled = true;
+  $("conversationCard").classList.add("hidden");
+
+  status("chatStatus", "مرحله ۱ از ۳: بررسی شناسه‌ها…");
+
+  const members = [user.uid, peer].sort();
+  const conversationId = members.join("_");
+
+  try {
+    status("chatStatus",
+      "مرحله ۲ از ۳: در حال ذخیره گفت‌وگو در Firestore…");
+
+    await setDoc(
+      doc(db, "conversations", conversationId),
+      {
+        members,
+        updatedAt: serverTimestamp()
+      },
+      { merge: true }
+    );
+
+    activeConversationId = conversationId;
+    $("conversationCard").classList.remove("hidden");
+
+    status("chatStatus",
+      "مرحله ۳ از ۳: گفت‌وگو ساخته شد؛ در حال دریافت پیام‌ها…",
+      "success");
+
+    stopMessages();
+
+    const messagesQuery = query(
+      collection(db, "conversations", conversationId, "messages"),
+      orderBy("createdAt", "asc")
+    );
+
+    unsubscribeMessages = onSnapshot(
+      messagesQuery,
+      snapshot => {
+        const box = $("messages");
+        box.replaceChildren();
+
+        if (snapshot.empty) {
+          const empty = document.createElement("div");
+          empty.className = "empty";
+          empty.textContent = "هنوز پیامی نیست؛ می‌توانی اولین پیام را بفرستی.";
+          box.appendChild(empty);
+          return;
+        }
+
+        snapshot.forEach(item => {
+          const data = item.data();
+          const bubble = document.createElement("div");
+
+          bubble.className =
+            "bubble" + (data.senderId === auth.currentUser?.uid ? " mine" : "");
+
+          const body = document.createElement("div");
+          body.textContent = data.text || "";
+
+          const small = document.createElement("small");
+          small.textContent =
+            data.senderId === auth.currentUser?.uid ? "شما" : "طرف مقابل";
+
+          bubble.append(body, small);
+          box.appendChild(bubble);
+        });
+
+        box.scrollTop = box.scrollHeight;
+      },
+      e => {
+        status("chatStatus",
+          "گفت‌وگو ساخته شد، اما خواندن پیام‌ها خطا داد:\n" +
+          errorText(e), "error");
+      }
+    );
+  } catch (e) {
+    status("chatStatus",
+      "خطا هنگام باز کردن گفت‌وگو:\n" + errorText(e) +
+      "\n\nاگر خطا permission-denied است، قوانین Firestore را بررسی می‌کنیم.",
+      "error");
+  } finally {
+    openingChat = false;
+    $("openChat").disabled = false;
+  }
+};
+
+$("sendMessage").onclick = async () => {
+  const user = auth.currentUser;
+  const text = $("messageText").value.trim();
+
+  if (!user || !activeConversationId) {
+    return status("messageStatus",
+      "ابتدا یک گفت‌وگو باز کن.", "error");
+  }
+
+  if (!text) {
+    return status("messageStatus", "ابتدا متن پیام را بنویس.", "error");
+  }
+
+  $("sendMessage").disabled = true;
+  status("messageStatus", "در حال ارسال پیام…");
+
+  try {
+    await addDoc(
+      collection(db, "conversations", activeConversationId, "messages"),
+      {
+        text,
+        senderId: user.uid,
+        createdAt: serverTimestamp()
+      }
+    );
+
+    $("messageText").value = "";
+    status("messageStatus", "پیام ارسال شد.", "success");
+  } catch (e) {
+    status("messageStatus",
+      "ارسال پیام ناموفق بود:\n" + errorText(e), "error");
+  } finally {
+    $("sendMessage").disabled = false;
+  }
+};
+
+$("messageText").addEventListener("keydown", e => {
+  if (e.key === "Enter") $("sendMessage").click();
+});
+
+$("logout").onclick = async () => {
+  stopMessages();
+  activeConversationId = null;
+
+  try {
+    await signOut(auth);
+  } catch (e) {
+    status("chatStatus", "خطا هنگام خروج:\n" + errorText(e), "error");
+  }
+};
+</script>
+</body>
+</html>
