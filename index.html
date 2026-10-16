@@ -354,7 +354,6 @@ $("openChat").onclick = async () => {
     setTimeout(() => reject(new Error("درخواست بیش از ۱۰ ثانیه طول کشید؛ اتصال Firestore را بررسی کن.")), 10000)
   )
 ]);
-    );
 
     activeConversationId = conversationId;
     $("conversationCard").classList.remove("hidden");
